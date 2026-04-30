@@ -1,0 +1,38 @@
+name: Checks
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go-tests:
+    name: ${{ 'Run tests' }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.26.2
+          check-latest: true
+
+      - name: Install dependencies
+        run: |
+          go mod download
+
+      - name: Run Unit tests
+        run: |
+          go test -race ./...
